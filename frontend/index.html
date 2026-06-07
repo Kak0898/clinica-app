@@ -786,7 +786,7 @@
 
   function renderConfirm() {
     const c = state.citaResp
-    const dateStr = new Date(c.fecha + 'T00:00:00').toLocaleDateString('es-CL',
+    const dateStr = new Date(c.fecha).toLocaleDateString('es-CL',
       { weekday:'long', day:'numeric', month:'long', year:'numeric' })
 
     document.getElementById('confirm-text').innerHTML =

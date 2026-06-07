@@ -29,3 +29,9 @@ export async function cancelar(req: Request, res: Response, next: NextFunction) 
     res.json(await service.cancelarCita(Number(req.params.id)))
   } catch (err) { next(err) }
 }
+
+export async function completar(req: Request, res: Response, next: NextFunction) {
+  try {
+    res.json(await service.completarCita(Number(req.params.id)))
+  } catch (err) { next(err) }
+}

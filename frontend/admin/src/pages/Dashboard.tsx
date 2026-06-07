@@ -14,35 +14,41 @@ export default function Dashboard() {
   const admin = JSON.parse(localStorage.getItem('admin') ?? '{}')
 
   useEffect(() => {
-    async function cargar() {
-      try {
-        const [citas, doctores, especialidades] = await Promise.all([
-          api.get('/citas'),
-          api.get('/doctores'),
-          api.get('/especialidades'),
-        ])
+  async function cargar() {
+    try {
+      const [citas, doctores, especialidades] = await Promise.all([
+        api.get('/citas'),
+        api.get('/doctores'),
+        api.get('/especialidades'),
+      ])
 
-        const hoy = new Date().toISOString().split('T')[0]
-        const mes = new Date().getMonth()
+      const hoy = new Date()
+      const diaHoy = hoy.getDate()
+      const mesHoy = hoy.getMonth()
+      const anioHoy = hoy.getFullYear()
 
-        setStats({
-          citasHoy: citas.data.filter((c: any) => {
-            const fechaCita = new Date(c.fecha).toISOString().split('T')[0]
-            return fechaCita === hoy
-          }).length,
-          citasMes: citas.data.filter((c: any) => {
-            return new Date(c.fecha).getMonth() === mes &&
-                  new Date(c.fecha).getFullYear() === new Date().getFullYear()
-          }).length,
-          doctoresActivos: doctores.data.length,
-          especialidades:  especialidades.data.length,
-        })
-      } finally {
-        setLoading(false)
-      }
+      setStats({
+        citasHoy: citas.data.filter((c: any) => {
+          const f = new Date(c.fecha)
+          return f.getUTCDate() === diaHoy &&
+                 f.getUTCMonth() === mesHoy &&
+                 f.getUTCFullYear() === anioHoy
+        }).length,
+        citasMes: citas.data.filter((c: any) => {
+          const f = new Date(c.fecha)
+          return f.getUTCMonth() === mesHoy &&
+                 f.getUTCFullYear() === anioHoy &&
+                 c.estado !== 'CANCELADA'
+        }).length,
+        doctoresActivos: doctores.data.length,
+        especialidades:  especialidades.data.length,
+      })
+    } finally {
+      setLoading(false)
     }
-    cargar()
-  }, [])
+  }
+  cargar()
+}, [])
 
   const cards = [
     { label: 'Citas hoy',         value: stats?.citasHoy,        color: 'bg-blue-50   text-blue-700' },

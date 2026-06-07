@@ -9,5 +9,6 @@ router.get('/',             ctrl.listar)
 router.get('/:id',          ctrl.obtener)
 router.post('/',            validate(crearCitaSchema), ctrl.crear)
 router.put('/:id/cancelar', ctrl.cancelar)
+router.put('/:id/completar', ctrl.completar)
 
 export default router

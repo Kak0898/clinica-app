@@ -74,3 +74,13 @@ export async function cancelarCita(id: number) {
     data:  { estado: 'CANCELADA' },
   })
 }
+
+export async function completarCita(id: number) {
+  const cita = await obtenerCita(id)
+  if (cita.estado === 'CANCELADA')   throw new AppError('No se puede completar una cita cancelada', 400)
+  if (cita.estado === 'COMPLETADA')  throw new AppError('La cita ya está completada', 400)
+  return prisma.cita.update({
+    where: { id },
+    data:  { estado: 'COMPLETADA' },
+  })
+}
