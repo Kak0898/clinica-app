@@ -97,3 +97,16 @@ enum EstadoCita {
   CANCELADA
   COMPLETADA
 }
+
+// ─────────────────────────────────────────
+// ADMIN
+// ─────────────────────────────────────────
+model Admin {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  email     String   @unique
+  password  String   // bcrypt hash
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

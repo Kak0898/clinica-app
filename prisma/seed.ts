@@ -64,8 +64,18 @@ async function main() {
     )
   )
 
+  // Admin por defecto
+  const { crearAdmin } = await import('../src/services/auth')
+  const adminExiste = await prisma.admin.findUnique({ where: { email: 'admin@clinica.com' } })
+  if (!adminExiste) {
+    await crearAdmin('Administrador', 'admin@clinica.com', 'admin123')
+    console.log('✅ Admin creado — email: admin@clinica.com / pass: admin123')
+  }
+
   console.log('✅ Horarios creados')
   console.log('🎉 Seed completado')
+
+
 }
 
 main()

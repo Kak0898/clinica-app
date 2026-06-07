@@ -3,7 +3,9 @@ import cors from 'cors'
 import helmet from 'helmet'
 
 import { errorHandler } from './middlewares/errorHandler'
+import { authMiddleware } from './middlewares/authMiddleware'
 import especialidadesRouter from './routes/especialidades'
+import authRouter from './routes/auth'
 import doctoresRouter from './routes/doctores'
 import citasRouter from './routes/citas'
 
@@ -15,6 +17,7 @@ app.use(cors())               // permite requests del frontend
 app.use(express.json())       // parsea body JSON
 
 // ── Rutas ─────────────────────────────────────────────────
+app.use('/api/auth', authRouter)
 app.use('/api/especialidades', especialidadesRouter)
 app.use('/api/doctores',       doctoresRouter)
 app.use('/api/citas',          citasRouter)
