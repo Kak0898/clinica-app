@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agenda de Citas — Clínica Central</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --font: 'DM Sans', sans-serif;
+      --bg: #ffffff;
+      --bg-secondary: #f5f5f3;
+      --bg-tertiary: #eeede9;
+      --text: #1a1a18;
+      --text-sec: #6b6b65;
+      --border: rgba(0,0,0,0.1);
+      --border-md: rgba(0,0,0,0.2);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --accent: #1a1a18;
+      --accent-inv: #ffffff;
+      --green: #1D9E75;
+      --green-bg: #E1F5EE;
+      --green-text: #0F6E56;
+      --red: #E24B4A;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1a18;
+        --bg-secondary: #242422;
+        --bg-tertiary: #2e2e2b;
+        --text: #f0efe9;
+        --text-sec: #999990;
+        --border: rgba(255,255,255,0.1);
+        --border-md: rgba(255,255,255,0.2);
+        --accent: #f0efe9;
+        --accent-inv: #1a1a18;
+        --green-bg: #0a3327;
+        --green-text: #5DCAA5;
+      }
+    }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg-secondary);
+      font-family: var(--font);
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .page {
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .card {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 2rem;
+      width: 100%;
+      max-width: 640px;
+    }
+
+    /* Header */
+    .header { margin-bottom: 2rem; }
+    .clinic-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-sec);
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .page-title { font-size: 22px; font-weight: 500; color: var(--text); }
+
+    /* Stepper */
+    .stepper {
+      display: flex;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    .step-item { display: flex; align-items: center; flex: 1; }
+    .step-circle {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 500; flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .step-circle.done { background: var(--green); color: #fff; border: none; }
+    .step-circle.active { background: var(--accent); color: var(--accent-inv); border: none; }
+    .step-circle.pending {
+      background: transparent; color: var(--text-sec);
+      border: 0.5px solid var(--border-md);
+    }
+    .step-line {
+      flex: 1; height: 0.5px;
+      background: var(--border);
+      margin: 0 6px;
+    }
+
+    /* Option cards - especialidades */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 1.5rem;
+    }
+    .option-card {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: left;
+    }
+    .option-card:hover { border-color: var(--border-md); background: var(--bg-secondary); }
+    .option-card.selected { border: 2px solid var(--accent); background: var(--bg-secondary); }
+    .card-icon { font-size: 22px; margin-bottom: 8px; color: var(--text-sec); }
+    .card-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+    .card-sub { font-size: 12px; color: var(--text-sec); }
+
+    /* Doctor cards */
+    .doc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 10px;
+      margin-bottom: 1.5rem;
+    }
+    .doc-card {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .doc-card:hover { border-color: var(--border-md); }
+    .doc-card.selected { border: 2px solid var(--accent); }
+    .doc-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 500; flex-shrink: 0;
+    }
+    .doc-name { font-size: 14px; font-weight: 500; color: var(--text); }
+    .doc-spec { font-size: 12px; color: var(--text-sec); margin-top: 1px; }
+    .doc-rating { font-size: 12px; color: var(--text-sec); margin-top: 4px; }
+
+    /* Calendar */
+    .calendar-wrap {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-bottom: 1.5rem;
+    }
+    .cal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .cal-title { font-size: 14px; font-weight: 500; color: var(--text); }
+    .cal-nav {
+      background: none;
+      border: 0.5px solid var(--border-md);
+      border-radius: var(--radius-md);
+      width: 28px; height: 28px;
+      cursor: pointer;
+      color: var(--text-sec);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      font-family: var(--font);
+    }
+    .cal-nav:hover { background: var(--bg-secondary); }
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .cal-day-name {
+      font-size: 11px; color: var(--text-sec);
+      text-align: center; padding: 4px 0;
+    }
+    .cal-day {
+      height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; border-radius: var(--radius-md);
+      cursor: default; color: var(--text-sec);
+    }
+    .cal-day.available { color: var(--text); cursor: pointer; }
+    .cal-day.available:hover { background: var(--bg-secondary); }
+    .cal-day.selected { background: var(--accent); color: var(--accent-inv); }
+    .cal-day.today { font-weight: 500; }
+    .cal-day.past { opacity: 0.3; cursor: default; }
+
+    /* Time slots */
+    .slots-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 8px;
+      margin-bottom: 1.5rem;
+    }
+    .slot {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 8px 0;
+      font-size: 13px; text-align: center;
+      cursor: pointer; color: var(--text);
+      transition: all 0.15s;
+      font-family: var(--font);
+    }
+    .slot:hover { border-color: var(--border-md); background: var(--bg-secondary); }
+    .slot.selected { border: 2px solid var(--accent); font-weight: 500; }
+    .slot.taken { color: var(--text-sec); opacity: 0.4; cursor: default; text-decoration: line-through; }
+
+    /* Form */
+    .form-group { margin-bottom: 1rem; }
+    .form-label { font-size: 13px; color: var(--text-sec); margin-bottom: 6px; display: block; }
+    .form-input {
+      width: 100%; padding: 9px 12px;
+      font-size: 14px;
+      border: 0.5px solid var(--border-md);
+      border-radius: var(--radius-md);
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      transition: border-color 0.15s;
+    }
+    .form-input:focus { outline: none; border-color: var(--accent); }
+    .form-input.error { border-color: var(--red) !important; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .error-msg { font-size: 12px; color: var(--red); margin-top: 4px; min-height: 16px; }
+
+    @media (max-width: 480px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    /* Summary */
+    .summary-card {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-bottom: 1.5rem;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 6px 0;
+      border-bottom: 0.5px solid var(--border);
+    }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-key { font-size: 13px; color: var(--text-sec); }
+    .summary-val { font-size: 13px; font-weight: 500; color: var(--text); text-align: right; max-width: 60%; }
+
+    /* Confirmation */
+    .confirm-box { text-align: center; padding: 1.5rem 1rem 1rem; }
+    .confirm-icon {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--green-bg);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1rem;
+    }
+    .confirm-icon i { font-size: 28px; color: var(--green); }
+    .confirm-title { font-size: 20px; font-weight: 500; color: var(--text); margin-bottom: 8px; }
+    .confirm-sub { font-size: 14px; color: var(--text-sec); line-height: 1.6; }
+    .confirm-code {
+      display: inline-block; margin-top: 14px;
+      background: var(--bg-secondary);
+      border: 0.5px solid var(--border-md);
+      border-radius: var(--radius-md);
+      padding: 6px 18px;
+      font-size: 16px; font-weight: 500;
+      color: var(--text); letter-spacing: 0.05em;
+    }
+
+    /* Buttons */
+    .btn-row {
+      display: flex; gap: 10px;
+      justify-content: flex-end;
+      margin-top: 1rem;
+    }
+    .btn {
+      padding: 9px 20px;
+      border-radius: var(--radius-md);
+      font-size: 14px; font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 0.5px solid var(--border-md);
+      font-family: var(--font);
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: var(--accent-inv);
+      border-color: var(--accent);
+    }
+    .btn-primary:hover { opacity: 0.82; }
+    .btn-primary:disabled { opacity: 0.35; cursor: default; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-sec);
+    }
+    .btn-ghost:hover { background: var(--bg-secondary); }
+
+    .section-title { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 14px; }
+    .section-sub { font-size: 13px; color: var(--text-sec); margin-bottom: 14px; }
+    .divider { height: 0.5px; background: var(--border); margin: 1.25rem 0; }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="card">
+
+    <div class="header">
+      <div class="clinic-tag">
+        <i class="ti ti-building-hospital" aria-hidden="true"></i>
+        Clínica Central
+      </div>
+      <div class="page-title">Reservar una cita</div>
+    </div>
+
+    <!-- Stepper -->
+    <div class="stepper" id="stepper">
+      <div class="step-item">
+        <div class="step-circle active" id="sc1">1</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-item">
+        <div class="step-circle pending" id="sc2">2</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-item">
+        <div class="step-circle pending" id="sc3">3</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-item">
+        <div class="step-circle pending" id="sc4">4</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-item">
+        <div class="step-circle pending" id="sc5">5</div>
+      </div>
+    </div>
+
+    <!-- STEP 1: Especialidad -->
+    <div id="step1">
+      <div class="section-title">¿Qué especialidad necesitas?</div>
+      <div class="cards-grid" id="esp-grid"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn1" disabled onclick="goStep(2)">
+          Continuar <i class="ti ti-arrow-right" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Doctor -->
+    <div id="step2" style="display:none">
+      <div class="section-title">Elige tu médico</div>
+      <div class="doc-grid" id="doc-grid"></div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="goStep(1)">
+          <i class="ti ti-arrow-left" aria-hidden="true"></i> Atrás
+        </button>
+        <button class="btn btn-primary" id="btn2" disabled onclick="goStep(3)">
+          Continuar <i class="ti ti-arrow-right" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Fecha y Hora -->
+    <div id="step3" style="display:none">
+      <div class="section-title">Selecciona fecha y hora</div>
+      <div class="calendar-wrap">
+        <div class="cal-header">
+          <button class="cal-nav" onclick="prevMonth()" aria-label="Mes anterior">
+            <i class="ti ti-chevron-left" aria-hidden="true"></i>
+          </button>
+          <span class="cal-title" id="cal-title"></span>
+          <button class="cal-nav" onclick="nextMonth()" aria-label="Mes siguiente">
+            <i class="ti ti-chevron-right" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+      <div id="slots-wrap" style="display:none">
+        <div class="section-sub" id="slots-label">Horarios disponibles</div>
+        <div class="slots-grid" id="slots-grid"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="goStep(2)">
+          <i class="ti ti-arrow-left" aria-hidden="true"></i> Atrás
+        </button>
+        <button class="btn btn-primary" id="btn3" disabled onclick="goStep(4)">
+          Continuar <i class="ti ti-arrow-right" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 4: Datos paciente -->
+    <div id="step4" style="display:none">
+      <div class="section-title">Tus datos de contacto</div>
+      <div class="section-sub">Te enviaremos la confirmación por correo y WhatsApp.</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="inp-nombre">Nombre completo</label>
+          <input class="form-input" id="inp-nombre" type="text" placeholder="Juan Pérez" />
+          <div class="error-msg" id="err-nombre"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="inp-rut">RUT</label>
+          <input class="form-input" id="inp-rut" type="text" placeholder="12.345.678-9"
+            oninput="formatRut(this)" maxlength="12" />
+          <div class="error-msg" id="err-rut"></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="inp-tel">Teléfono</label>
+          <input class="form-input" id="inp-tel" type="tel" placeholder="+56 9 1234 5678" />
+          <div class="error-msg" id="err-tel"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="inp-email">Correo electrónico</label>
+          <input class="form-input" id="inp-email" type="email" placeholder="juan@correo.com" />
+          <div class="error-msg" id="err-email"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="inp-prevision">Previsión</label>
+        <select class="form-input" id="inp-prevision">
+          <option value="">Selecciona tu previsión</option>
+          <option>Fonasa A</option>
+          <option>Fonasa B</option>
+          <option>Fonasa C</option>
+          <option>Fonasa D</option>
+          <option>Isapre</option>
+          <option>Particular</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="goStep(3)">
+          <i class="ti ti-arrow-left" aria-hidden="true"></i> Atrás
+        </button>
+        <button class="btn btn-primary" onclick="validateAndConfirm()">
+          Confirmar cita <i class="ti ti-check" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 5: Confirmación -->
+    <div id="step5" style="display:none">
+      <div class="confirm-box">
+        <div class="confirm-icon">
+          <i class="ti ti-circle-check" aria-hidden="true"></i>
+        </div>
+        <div class="confirm-title">¡Cita agendada!</div>
+        <div class="confirm-sub" id="confirm-text"></div>
+        <div class="confirm-code" id="confirm-code"></div>
+      </div>
+      <div class="summary-card" id="confirm-summary"></div>
+      <div class="btn-row" style="justify-content:center">
+        <button class="btn btn-ghost" onclick="resetApp()">
+          <i class="ti ti-plus" aria-hidden="true"></i> Agendar otra cita
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ── Configuración ──────────────────────────────────────────
+  // Cambia esta URL cuando despliegues el backend
+  const API = 'http://localhost:3000/api'
+
+  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+  const DIAS  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
+
+  // Estado global de la app
+  let state = {
+    esp:       null,   // objeto especialidad completo
+    doc:       null,   // objeto doctor completo
+    fecha:     null,   // Date
+    hora:      null,   // string "HH:MM"
+    citaResp:  null,   // respuesta completa del POST /citas
+    calYear:   null,
+    calMonth:  null,
+  }
+
+  // ── Helpers de UI ──────────────────────────────────────────
+
+  function setLoading(gridId, cols = 3) {
+    const skels = Array(cols).fill(0).map(() => `
+      <div style="background:var(--bg-secondary);border-radius:var(--radius-lg);height:80px;
+        animation:pulse 1.2s ease-in-out infinite;border:0.5px solid var(--border)"></div>`).join('')
+    document.getElementById(gridId).innerHTML = skels
+  }
+
+  function showError(gridId, msg) {
+    document.getElementById(gridId).innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--red);font-size:14px">
+        <i class="ti ti-alert-circle" style="font-size:22px;display:block;margin-bottom:8px"></i>${msg}
+      </div>`
+  }
+
+  // ── API fetch wrapper ──────────────────────────────────────
+
+  async function apiFetch(path, options = {}) {
+    const res = await fetch(API + path, {
+      headers: { 'Content-Type': 'application/json' },
+      ...options,
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Error en la solicitud')
+    return data
+  }
+
+  // ── Init ──────────────────────────────────────────────────
+
+  function init() {
+    const now = new Date()
+    state.calYear  = now.getFullYear()
+    state.calMonth = now.getMonth()
+    cargarEspecialidades()
+    renderCal()
+  }
+
+  // ── STEP 1: Especialidades ────────────────────────────────
+
+  async function cargarEspecialidades() {
+    setLoading('esp-grid', 6)
+    try {
+      const data = await apiFetch('/especialidades')
+      renderEsp(data)
+    } catch (e) {
+      showError('esp-grid', 'No se pudieron cargar las especialidades. Intenta de nuevo.')
+    }
+  }
+
+  function renderEsp(especialidades) {
+    document.getElementById('esp-grid').innerHTML = especialidades.map(e => `
+      <div class="option-card${state.esp?.id === e.id ? ' selected' : ''}" onclick="selEsp(${e.id})">
+        <div class="card-icon"><i class="ti ${e.icono}" aria-hidden="true"></i></div>
+        <div class="card-title">${e.nombre}</div>
+        <div class="card-sub">${e.descripcion}</div>
+      </div>`).join('')
+  }
+
+  async function selEsp(id) {
+    // Re-fetch para tener el objeto actualizado
+    try {
+      const data = await apiFetch('/especialidades')
+      state.esp  = data.find(e => e.id === id)
+      state.doc  = null
+      state.fecha = null
+      state.hora  = null
+      renderEsp(data)
+      document.getElementById('btn1').disabled = false
+    } catch(e) { /* silencioso, ya está pintado */ }
+  }
+
+  // ── STEP 2: Doctores ──────────────────────────────────────
+
+  async function cargarDoctores() {
+    setLoading('doc-grid', 2)
+    try {
+      const data = await apiFetch(`/doctores?especialidadId=${state.esp.id}`)
+      renderDocs(data)
+    } catch (e) {
+      showError('doc-grid', 'No se pudieron cargar los médicos.')
+    }
+  }
+
+  function renderDocs(doctores) {
+    if (!doctores.length) {
+      showError('doc-grid', 'No hay médicos disponibles para esta especialidad.')
+      return
+    }
+    document.getElementById('doc-grid').innerHTML = doctores.map(d => `
+      <div class="doc-card${state.doc?.id === d.id ? ' selected' : ''}" onclick="selDoc(${d.id})">
+        <div class="doc-avatar" style="background:${d.avatarColor};color:${d.avatarColorText}">
+          ${d.avatarIniciales}
+        </div>
+        <div>
+          <div class="doc-name">${d.nombre} ${d.apellido}</div>
+          <div class="doc-spec">${d.especialidad.nombre}</div>
+        </div>
+      </div>`).join('')
+  }
+
+  async function selDoc(id) {
+    try {
+      const data = await apiFetch(`/doctores?especialidadId=${state.esp.id}`)
+      state.doc = data.find(d => d.id === id)
+      renderDocs(data)
+      document.getElementById('btn2').disabled = false
+    } catch(e) { /* silencioso */ }
+  }
+
+  // ── STEP 3: Calendario ────────────────────────────────────
+
+  function renderCal() {
+    document.getElementById('cal-title').textContent = `${MESES[state.calMonth]} ${state.calYear}`
+    const g = document.getElementById('cal-grid')
+    g.innerHTML = DIAS.map(d => `<div class="cal-day-name">${d}</div>`).join('')
+
+    const first = new Date(state.calYear, state.calMonth, 1).getDay()
+    const total = new Date(state.calYear, state.calMonth + 1, 0).getDate()
+    const today = new Date(); today.setHours(0,0,0,0)
+
+    for (let i = 0; i < first; i++) g.innerHTML += `<div></div>`
+
+    for (let d = 1; d <= total; d++) {
+      const date      = new Date(state.calYear, state.calMonth, d)
+      const dow       = date.getDay()
+      const isPast    = date < today
+      const isWeekend = dow === 0 || dow === 6
+      const isToday   = date.getTime() === today.getTime()
+      const isSel     = state.fecha &&
+        state.fecha.getFullYear() === state.calYear &&
+        state.fecha.getMonth()    === state.calMonth &&
+        state.fecha.getDate()     === d
+
+      let cls = 'cal-day'
+      if (isPast || isWeekend) cls += ' past'
+      else cls += ' available'
+      if (isToday) cls += ' today'
+      if (isSel)   cls += ' selected'
+
+      const onclick = (!isPast && !isWeekend) ? `onclick="selFecha(${d})"` : ''
+      g.innerHTML += `<div class="${cls}" ${onclick}>${d}</div>`
+    }
+  }
+
+  async function selFecha(d) {
+    state.fecha = new Date(state.calYear, state.calMonth, d)
+    state.hora  = null
+    renderCal()
+    await cargarSlots()
+  }
+
+  function prevMonth() {
+    if (state.calMonth === 0) { state.calMonth = 11; state.calYear-- }
+    else state.calMonth--
+    renderCal()
+  }
+  function nextMonth() {
+    if (state.calMonth === 11) { state.calMonth = 0; state.calYear++ }
+    else state.calMonth++
+    renderCal()
+  }
+
+  // ── STEP 3: Slots ─────────────────────────────────────────
+
+  async function cargarSlots() {
+    const wrap = document.getElementById('slots-wrap')
+    wrap.style.display = 'block'
+
+    const dateStr = state.fecha.toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' })
+    document.getElementById('slots-label').textContent = `Horarios disponibles — ${dateStr}`
+
+    // Skeleton mientras carga
+    document.getElementById('slots-grid').innerHTML = Array(8).fill(0).map(() =>
+      `<div style="background:var(--bg-secondary);border-radius:var(--radius-md);height:36px;
+        animation:pulse 1.2s ease-in-out infinite;border:0.5px solid var(--border)"></div>`
+    ).join('')
+    document.getElementById('btn3').disabled = true
+
+    try {
+      const fecha  = fechaToString(state.fecha)
+      const data   = await apiFetch(`/doctores/${state.doc.id}/slots?fecha=${fecha}`)
+      renderSlots(data.slots)
+    } catch (e) {
+      document.getElementById('slots-grid').innerHTML =
+        `<div style="grid-column:1/-1;text-align:center;color:var(--red);font-size:13px;padding:1rem">
+          No se pudieron cargar los horarios. Intenta de nuevo.
+        </div>`
+    }
+  }
+
+  function renderSlots(slots) {
+    if (!slots.length) {
+      document.getElementById('slots-grid').innerHTML =
+        `<div style="grid-column:1/-1;text-align:center;color:var(--text-sec);font-size:13px;padding:1rem">
+          No hay horarios disponibles para este día.
+        </div>`
+      return
+    }
+    document.getElementById('slots-grid').innerHTML = slots.map(s => {
+      const isSel = state.hora === s.hora
+      return `<div class="slot${!s.disponible ? ' taken' : isSel ? ' selected' : ''}"
+        ${s.disponible ? `onclick="selHora('${s.hora}')"` : ''}>${s.hora}</div>`
+    }).join('')
+  }
+
+  function selHora(h) {
+    state.hora = h
+    // Re-renderizar slots con nueva selección
+    const slotsEl = document.getElementById('slots-grid')
+    slotsEl.querySelectorAll('.slot').forEach(el => {
+      el.classList.toggle('selected', el.textContent.trim() === h)
+    })
+    document.getElementById('btn3').disabled = false
+  }
+
+  // ── STEP 4 → 5: Validar y enviar a la API ────────────────
+
+  async function validateAndConfirm() {
+    // Validación cliente
+    let ok = true
+    const fields = [
+      { id:'inp-nombre', err:'err-nombre', msg:'Ingresa tu nombre completo', check: v => v.trim().split(/\s+/).length >= 2 },
+      { id:'inp-rut',    err:'err-rut',    msg:'RUT inválido',               check: v => validateRut(v) },
+      { id:'inp-tel',    err:'err-tel',    msg:'Ingresa un teléfono válido', check: v => v.replace(/\D/g,'').length >= 9 },
+      { id:'inp-email',  err:'err-email',  msg:'Correo electrónico inválido',check: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) },
+    ]
+    fields.forEach(f => {
+      const inp = document.getElementById(f.id)
+      const err = document.getElementById(f.err)
+      if (!f.check(inp.value)) { inp.classList.add('error'); err.textContent = f.msg; ok = false }
+      else { inp.classList.remove('error'); err.textContent = '' }
+    })
+    if (!ok) return
+
+    // Deshabilitar botón y mostrar spinner
+    const btnConfirmar = document.querySelector('#step4 .btn-primary')
+    const textoOriginal = btnConfirmar.innerHTML
+    btnConfirmar.disabled = true
+    btnConfirmar.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> Agendando...'
+
+    try {
+      const body = {
+        doctorId:         state.doc.id,
+        especialidadId:   state.esp.id,
+        fecha:            fechaToString(state.fecha),
+        hora:             state.hora,
+        pacienteNombre:   document.getElementById('inp-nombre').value,
+        pacienteRut:      document.getElementById('inp-rut').value,
+        pacienteTelefono: document.getElementById('inp-tel').value,
+        pacienteEmail:    document.getElementById('inp-email').value,
+        prevision:        document.getElementById('inp-prevision').value || 'No indicada',
+      }
+
+      state.citaResp = await apiFetch('/citas', {
+        method: 'POST',
+        body:   JSON.stringify(body),
+      })
+
+      goStep(5)
+
+    } catch (e) {
+      // Mostrar error debajo del botón
+      let msgEl = document.getElementById('api-error-msg')
+      if (!msgEl) {
+        msgEl = document.createElement('div')
+        msgEl.id = 'api-error-msg'
+        msgEl.style.cssText = 'color:var(--red);font-size:13px;text-align:center;margin-top:10px'
+        btnConfirmar.parentNode.after(msgEl)
+      }
+      msgEl.textContent = e.message || 'Error al agendar la cita. Intenta de nuevo.'
+      btnConfirmar.disabled = false
+      btnConfirmar.innerHTML = textoOriginal
+    }
+  }
+
+  // ── STEP 5: Confirmación ──────────────────────────────────
+
+  function renderConfirm() {
+    const c = state.citaResp
+    const dateStr = new Date(c.fecha + 'T00:00:00').toLocaleDateString('es-CL',
+      { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+
+    document.getElementById('confirm-text').innerHTML =
+      `Se ha enviado la confirmación a <strong>${c.pacienteEmail}</strong><br>y por WhatsApp al ${c.pacienteTelefono}`
+    document.getElementById('confirm-code').textContent = 'Código: ' + c.codigoConfirmacion
+    document.getElementById('confirm-summary').innerHTML = `
+      <div class="summary-row"><span class="summary-key">Paciente</span><span class="summary-val">${c.pacienteNombre}</span></div>
+      <div class="summary-row"><span class="summary-key">RUT</span><span class="summary-val">${c.pacienteRut}</span></div>
+      <div class="summary-row"><span class="summary-key">Especialidad</span><span class="summary-val">${c.especialidad.nombre}</span></div>
+      <div class="summary-row"><span class="summary-key">Médico</span><span class="summary-val">${c.doctor.nombre} ${c.doctor.apellido}</span></div>
+      <div class="summary-row"><span class="summary-key">Fecha</span><span class="summary-val">${dateStr}</span></div>
+      <div class="summary-row"><span class="summary-key">Hora</span><span class="summary-val">${c.hora} hrs</span></div>
+      <div class="summary-row"><span class="summary-key">Previsión</span><span class="summary-val">${c.prevision}</span></div>
+    `
+  }
+
+  // ── Navegación ────────────────────────────────────────────
+
+  function goStep(n) {
+    [1,2,3,4,5].forEach(i => {
+      document.getElementById('step' + i).style.display = i === n ? 'block' : 'none'
+    })
+    updateStepper(n)
+    if (n === 2) cargarDoctores()
+    if (n === 5) renderConfirm()
+  }
+
+  function updateStepper(active) {
+    for (let i = 1; i <= 5; i++) {
+      const el = document.getElementById('sc' + i)
+      if (i < active) {
+        el.className = 'step-circle done'
+        el.innerHTML = '<i class="ti ti-check" style="font-size:13px"></i>'
+      } else if (i === active) {
+        el.className = 'step-circle active'
+        el.textContent = i
+      } else {
+        el.className = 'step-circle pending'
+        el.textContent = i
+      }
+    }
+  }
+
+  // ── Utils ─────────────────────────────────────────────────
+
+  function fechaToString(date) {
+    const y = date.getFullYear()
+    const m = String(date.getMonth() + 1).padStart(2, '0')
+    const d = String(date.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+
+  function formatRut(inp) {
+    let v = inp.value.replace(/[^0-9kK]/g, '').toUpperCase()
+    if (v.length > 1) {
+      const dv  = v.slice(-1)
+      let   num = v.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+      inp.value = num + '-' + dv
+    } else { inp.value = v }
+  }
+
+  function validateRut(rut) {
+    const clean = rut.replace(/[.\-]/g, '').toUpperCase()
+    if (clean.length < 2) return false
+    const dv  = clean.slice(-1)
+    const num = parseInt(clean.slice(0, -1))
+    if (isNaN(num)) return false
+    let sum = 0, mult = 2, tmp = num
+    while (tmp > 0) { sum += (tmp % 10) * mult; tmp = Math.floor(tmp / 10); mult = mult === 7 ? 2 : mult + 1 }
+    const calc     = 11 - (sum % 11)
+    const expected = calc === 11 ? '0' : calc === 10 ? 'K' : String(calc)
+    return dv === expected
+  }
+
+  // ── Reset ─────────────────────────────────────────────────
+
+  function resetApp() {
+    state = { esp:null, doc:null, fecha:null, hora:null, citaResp:null, calYear:new Date().getFullYear(), calMonth:new Date().getMonth() }
+    ;['inp-nombre','inp-rut','inp-tel','inp-email'].forEach(id => {
+      const el = document.getElementById(id)
+      el.value = ''; el.classList.remove('error')
+    })
+    ;['err-nombre','err-rut','err-tel','err-email'].forEach(id => {
+      document.getElementById(id).textContent = ''
+    })
+    document.getElementById('inp-prevision').value = ''
+    document.getElementById('slots-wrap').style.display = 'none'
+    document.getElementById('btn1').disabled = true
+    goStep(1)
+    cargarEspecialidades()
+    renderCal()
+  }
+
+  // ── CSS animaciones ───────────────────────────────────────
+  const styleEl = document.createElement('style')
+  styleEl.textContent = `
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    @keyframes spin   { to{transform:rotate(360deg)} }
+  `
+  document.head.appendChild(styleEl)
+
+  init()
+</script>
+</body>
+</html>

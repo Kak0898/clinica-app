@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────
+// ESPECIALIDAD
+// ─────────────────────────────────────────
+model Especialidad {
+  id          Int       @id @default(autoincrement())
+  nombre      String    @unique
+  descripcion String
+  icono       String    // nombre del icono tabler, ej: "ti-stethoscope"
+  activo      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  doctores    Doctor[]
+  citas       Cita[]
+}
+
+// ─────────────────────────────────────────
+// DOCTOR
+// ─────────────────────────────────────────
+model Doctor {
+  id             Int       @id @default(autoincrement())
+  nombre         String
+  apellido       String
+  avatarIniciales String   // ej: "AM"
+  avatarColor    String    // hex bg, ej: "#B5D4F4"
+  avatarColorText String   // hex texto, ej: "#0C447C"
+  activo         Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  especialidadId Int
+  especialidad   Especialidad  @relation(fields: [especialidadId], references: [id])
+
+  horarios       HorarioDoctor[]
+  citas          Cita[]
+}
+
+// ─────────────────────────────────────────
+// HORARIO DOCTOR
+// Define qué días y en qué rango trabaja
+// ─────────────────────────────────────────
+model HorarioDoctor {
+  id                Int     @id @default(autoincrement())
+  diaSemana         Int     // 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie
+  horaInicio        String  // "09:00"
+  horaFin           String  // "17:00"
+  intervaloMinutos  Int     @default(30)
+  activo            Boolean @default(true)
+
+  doctorId  Int
+  doctor    Doctor  @relation(fields: [doctorId], references: [id])
+
+  @@unique([doctorId, diaSemana]) // un horario por día por doctor
+}
+
+// ─────────────────────────────────────────
+// CITA
+// ─────────────────────────────────────────
+model Cita {
+  id                  Int        @id @default(autoincrement())
+  fecha               DateTime   @db.Date
+  hora                String     // "10:30"
+  codigoConfirmacion  String     @unique
+  estado              EstadoCita @default(PENDIENTE)
+
+  // Datos del paciente (sin login por ahora)
+  pacienteNombre      String
+  pacienteRut         String
+  pacienteTelefono    String
+  pacienteEmail       String
+  prevision           String     @default("No indicada")
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  doctorId       Int
+  doctor         Doctor       @relation(fields: [doctorId], references: [id])
+
+  especialidadId Int
+  especialidad   Especialidad @relation(fields: [especialidadId], references: [id])
+
+  @@unique([doctorId, fecha, hora]) // no dos citas al mismo doctor, día y hora
+}
+
+enum EstadoCita {
+  PENDIENTE
+  CONFIRMADA
+  CANCELADA
+  COMPLETADA
+}
