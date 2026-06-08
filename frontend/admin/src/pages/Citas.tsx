@@ -37,7 +37,7 @@ export default function Citas() {
   const [filtroFecha,  setFiltroFecha]  = useState('')
   const [busqueda,     setBusqueda]     = useState('')
   const [accionando,   setAccionando]   = useState<number | null>(null)
-
+useEffect(() => { cargar() }, [filtroFecha, filtroEstado])
   useEffect(() => { cargar() }, [])
 
   async function cargar() {
@@ -106,7 +106,10 @@ export default function Citas() {
         <input
           type="date"
           value={filtroFecha}
-          onChange={e => { setFiltroFecha(e.target.value); setTimeout(cargar, 100) }}
+          onChange={async e => { 
+            const val = e.target.value
+            setFiltroFecha(val)
+            }}
           className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400"
         />
         <select
@@ -161,7 +164,7 @@ export default function Citas() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="text-gray-800">
-                      {new Date(c.fecha + 'T00:00:00').toLocaleDateString('es-CL', { day:'numeric', month:'short', year:'numeric' })}
+                      {new Date(c.fecha).toLocaleDateString('es-CL', { day:'2-digit', month:'2-digit', year:'numeric', timeZone: 'UTC' })}
                     </div>
                     <div className="text-xs text-gray-400">{c.hora} hrs</div>
                   </td>
